@@ -1,0 +1,480 @@
+With a copy of chorus-lapilli-0.1.0.tgz, if you want to open and run the
+ application locally. Unzip the file and cd to the src directory and run
+ npm start and open the link shown in the terminal.
+
+
+To run the application, download the chorus-lapilli tgz file, cd into
+ the same directory and run the command ->   $ tar -xvzf
+./chorus-lapilli-0.1.0.tgz then cd into the directory named package,
+ and run npx create-react-app , then npm start from the src directory,
+ and click the local host link it presents.
+
+To play the game, there are 2 players represented by X and O respectively.
+The first 6 turns will consist of the two players placing 3 marks on the
+board. This is done simply by clicking the sqaure they want, if it is not
+a valid choise, they must choose adifferent one, but it will still
+be their turn up until they choose a valid block.
+
+After the first 6 turns, he players must move their existing marks around.
+To do so, click the mark you want to move, the index should apear on the
+app ui. Then, click the block you would like to move it to. Then the index
+selected should be blank. If the player makes a mistake, simply click the
+first choice blobk again, and it should unselect it. Verify by checking
+that the index selected appears blank.
+
+When a player wins, it will replace the string that says next player,
+and display who the winner was.
+
+
+Section1 : Things similar to tic-tac-toe
+I start out by creating a project with the function create-react-app from
+npx in my desktop directory, and call it chorus-lapilli. Then, cd into
+that
+ directory.
+Extra note: npx --version returns 9.3.1
+Extra note: npx comes from npm
+My terminal prompted me to install a new package: create-react-app@5.0.1,
+and I pressed yes. Afterwards it successfully shows the app when i ls
+( dir on windows )Just to test that the code creates and renders the app
+correctly. Then we can use npm start to render our app. Currently this
+won't do much since we have no code that edits the app. Some files that
+were created by this command include: .gitignore, 2 .json files, and a
+README markdown file.
+Next we want to go to the files where we can start to code how the app
+will look/behave. cd into the src directory, there will be a file App.js,
+ this is where the main implementation will take place. Other files
+ include the css and other js files.Also, the Next.js is a good
+environment
+ choice since we want a full-stack app. http://localhost:3000 will display
+our app. Now open the App.js file and delete the function App’s
+implementation. This is where the implementation of chorus-lapilli will
+go. For simplivity App will remain as our main parent function.
+Next we can start the implementation of the gameboard. For this we will
+have 9 blocks that are part of a board we can display in the Appp
+function.
+         First, we can create the block component in the function Block.
+For now it has no parameters, but in the future there should be a way for
+it to know what to display, and whether it has been clicked. For now, the
+implementation will be just a button. Next can define a css class the
+button
+isnt so small. Go to App.css and create two style classes. First, body,
+and
+set the margin to 30px, this way our App isnt in the top corner. Then
+create
+  the .body class, here set:
+.block {
+   background: #cea169;
+   border: 1px solid #704a0d;
+   float: left;
+   font-size: 24px;
+   font-weight: bold;
+   line-height: 34px;
+   height: 34px;
+   margin-right: 0px;
+   margin-top: -1px;
+   padding: 0;
+   text-align: center;
+   width: 34px;
+}
+Save, and have App() return one Block. Then save again and the app should
+  return a small square. Next ill implement a Board function that holds
+and returns the 3x3 grid board made of 9 blocks. Create the function
+Board() that returns 9 squares divided by <div>s We also need the divs
+form a grid. So create a class row in App.css that does this with:
+.row:after {
+   clear: both;
+   content: '';
+   display: table;
+}
+  Remember to use fragment tags <></> in Board. Now have App() return a
+Board. Now a 3x3 grid should show.Next, i want the squares to react to
+being clicked, so i need to have a value presented on the event that it
+is clicked, starting with the empty string. Start by passing the value=”X”
+into each block, then alter Block so that it takes that prop and presents
+it.First i try just making sure it will react to a click by setting value
+to X if its clicked. First pass another prog to Block called blockClick
+that is called onClick. Before this, we first must create a state in Board
+so that renders happen when we click and change the values.
+In Board, create an array of nine elements set to null:
+   const [squares, setSquares] = useState(Array(9).fill(null));
+Make sure to import useState from react as well. Then instead of just
+passing value, we can pass an element of this array via Block props. Like:
+<Block value={squares[0]} blockClick={blockClick}/> ans so on.
+Then we need block click function to work for certain elements, so we
+add the parameter i, and have it change squares[i] ,
+function blockClick (i) { squares[i] = 'X; }
+   But, to actually change squares we need to create a copt, alter that
+   copy, ans set squares to that altered copy. So:
+   function blockClick (i) {
+     const copy = squares.slice();
+     copy[i] = 'X';
+     setSquares(copy);
+ }
+        Now, we cant pass this function like: blockClick(2) in the
+props because we would enter an infinite loop. Instead we use arrow
+functions:
+      <Block value={squares[0]} blockClick={() => blockClick(0)}/>
+        Do this for all 9 elements.
+Next i want to implement turns. This can be handled in Board,
+specifically the blockClick function, where we set X or O based off
+ the value.
+So in Board, define xIsNext
+  const [xIsNext, setXIsNext] = useState(true);
+function Board({xIsNext,setXIsNext}) {
+Then, we can use this in blockClick to set it to X or O, and set
+ xIsNext to T/F:
+    if (xIsNext) {
+      copy[i] = 'X';
+    } else {
+      copy[i] = 'O';
+    }
+But, we need a way to “lock” blocks if the other player has it.
+To do so,we can check if the current square they clicked already
+has a value. So in blockClick:
+    if (squares[i]){
+      return;
+    }
+Now the behavior is that we there are two players that can click to fill
+in a block.
+
+
+Now we want to implement a way to check if there is a winning sequence.
+To do do ill create a function checkWin() This function will check the
+board, so it has the parameter `squares`. We can manually list the
+possible winning sequences. Then check that each of those is filled,
+then check that they are all the same element. Then return that element
+ so we know who won. Later we can add a component in App that will
+display the winner.
+  const winner = checkWin(squares);
+  let status;
+  if (winner) {
+    status = "Winner: " + winner;
+  } else {
+    status = "Next Player: " + (xIsNext ? "X" : "O" );
+  }
+A small optimization i can add later is call checkWin once, but im lazy.
+To display the winner/turn we can add {status} at the top of Board’s html
+ return stuff.
+
+
+
+Section 2: What different / What i added - chorus-lapilli
+This first section describes my process of implementation.
+The next large detail that ill work is implementing chorus lapilli rules.
+I can further break this down with implementing: a counter for the first 3
+ turns, that is, the 6th turn total where each player has marked 3
+squares.
+ After that, the game should enter a second phase.
+For now, ill have these counters in App, but i could possibly put it in
+ Board later if its too complicated.
+Create the state Phase1 and Phase2 in the App function. Set phase 1 to
+true and 2 to false, these will switch later in Board after a counter
+reaches a number. Then pass these to the Board, via props. Create the
+state
+ at the beginning of the board. Set it to zero, in block click, have it
+increment by 1 if it passes the checks. To increment this, use the
+function
+ setTurns with the argument turns + 1 , at the end of blockClick. Then
+there
+ is a check on turns to switch the phases.
+At this point there is no sort of lock on the board after 6 turns. I also
+found some logic errors with the previous implementation, the lock was not
+returning, and some things needed to happen only if phase 1 is true. Later
+I will implement the shifting. A problem I noticed was that turns are zero
+indexed, so I changed it to start from 1 so that it was more readable. Now
+the code locks properly after the sixth turn.
+The next challenge is selecting the filled block we are moving from, and
+the block we are moving to. The best way is probably to do so in phase 2.
+There should be a check in blockClick, first to see if there is an element
+in that block. Then, it should save that spot in some variable.
+        The main logic for this is that on a player's turn, the app waits
+for a player to select a block. Then it saves the index toit can do stuff
+with it later. Then the player must choose another block to switch it
+to/move it to. There are four main options for this: they choose an empty
+block, a block with the opposite value, a block with the same value, and
+they select the same block. The second and third sound similar but it may
+be useful to consider them separately.
+First i need to restructure the way i implemented blockClick so that it
+reacts differently based on the phase. First have it check win at the
+beginning. Then it creates the copy. Next create an if else if statement,
+first check if phase1 is true, else if checks is phase2 is true.
+For phase 1, check that the element does not have a value already, then
+the
+rest of the implementation should be the same as before. For phase2
+behavior
+we need some additional state values. At the beginning of Board, add
+chooseFirst to store whether we are choosing outer first element, and
+firstIndex to store the index of our first choice. As well as their
+functions.
+  const [chooseFirst,setCF] = useState(true);
+  const [firstIndex,setFI] = useState();
+Next, we will have an if else statement to check whether this is our first
+or second choice in this turn. If we are making the first choice, check
+that the element at i is not null, then make sure the element matches the
+player whose turn it is. At this point i means we selected a valid element
+for the first choice. Now it will set squares to copy, but no changes were
+made so its okay, not optimal, but it doesn't create any errors, or at
+least shouldn't.
+The issue with thegrid numbering has been fixed, i was using the wrong
+class
+for the 3 rows, it should be className=’row’ not =’block’ =>
+<div className='row'>
+Next we can have another auxiliary function check that the second choice
+has
+a valid index, since we can only go 1 left,right.up.down.diagonal.
+This function will be called oneAway and will return a bool that describes
+whether the second choice is a valid spot to move to. We will also pass
+the
+values i , firstIndex, and copy to it. function phaseTwo(grid,to,from) {
+We will just harcode this part because its only 3x3. Basically create a
+list
+of 9 lists, have the index correspond to a list of adjacent elements.
+           const lines = [
+     [1,3,4],
+     [0,2,3,4,5],
+     [1,4,5],
+     [0,1,4,6,7],
+     [0,1,2,3,5,6,7,8],
+     [1,2,4,7,8],
+     [3,4,7],
+     [6,3,4,5,8],
+     [4,5,7]
+  ];
+Then for element number ‘firstIndex’, make sure that i is in
+ that array. The loop should look like:
+  const len = lines[from].length;
+  for (let j = 0; j < len; j++) {
+     if(lines[from][j] === to) return true;
+  }
+And otherwise return false.
+The next step is to actually implement the phaseTwo Function. Later i
+might
+put more checks there to clean up blockClick, or maybe other functions.
+Especially when i have to implement the other rule it would help. We can
+assume that our first choice is valid, so now we need to check that the
+second is as well. Now, we need the index of the second and the first as
+well as a copy of the grid. So pass copy, firstIndex, and i to the
+function:
+function phaseTwo(grid,to,from) { Again this is only called if the second
+choice is valid, so our focus is to handle the grid and doing the swap of
+elements. This can be done by setting the element were moving to equal to
+the value at the index were moving from. Then we can set that ‘from’
+square to null. Since this function returns an array we can directly
+call setSquares on the call. After this swap we need to set xIsNext to
+its opposite ( ie switch turns ) and set the chooseFirst tracker to true
+since the other player will now choose their first.
+Another feature that needs to be added is unselecting. Currently, if you
+select an element where you cant move, the game gets stuck. To fix, we
+want
+allow for unselecting when the current selection is clicked in the second
+choice. In this case, in the p2 section, where we are making the second
+selection, where we check if copy[i] has a value already, add another
+check
+for if i === firstIndex. There, set chooseFirst to true.
+The next feature is the constraint on the middle block. The rule is that
+“If you have three pieces on the board and one of your pieces is in the
+center square, you must either win or vacate the center square in your
+next move.“ This could be implemented using a bool to indicate whether
+the middle spot is taken, then, when the player chooses their move, it
+must be a winning move. This can be done by calculating the board if that
+move is taken, and only returning it if its a board with a win for the
+player.
+To do so, i will add the value ‘middle’ and set it to false. Then, when
+i set phase 2 to begin, i check for whether its occupied. Then phase2
+begins knowing whether its occupied. Whenever the player makes a movem
+it first checks whether the middle spot is taken, if its free it continues
+regularly. There are three function that will help simplify the code.
+Declare the functions:
+1. function needToMoveQ(xTurn, grid,mTaken)
+    1. This function will check whether the current player needs to move.
+For the implementation, first check whether the middle spot is taken.
+Then, check if the value matches the player whos turn it is.
+    2. function needToMoveQ(xTurn, grid,mTaken) {
+   //check if mid is taken by player
+   if (mTaken) {
+     if( grid[4] === 'X' && xTurn ){
+       return true;
+     }
+     if (grid[4] === 'O' && !xTurn) {
+       return true;
+     }
+     return false;//mid taken, but its not the current player's
+   }else{
+     return false;
+   }
+2}
+3. function willWin(grid,to,from)
+    1. This function will check whether the move the player wants to do is
+one that will result in a win. We want this because w want to look at the
+move without changing out current board. For implementing this, swap the
+elements the way phaseTwo() would, then store the function specific copy
+of squares to the winning board function we already have, that is,
+checkWin().
+    2. function willWin(grid,to,from) {
+   grid[to] = grid[from];
+   grid[from] = null;
+   if( checkWin(grid) === 'X' || checkWin(grid) === 'O' )
+     return true;
+}
+
+
+       3) function willGetRidOFMid(gridcp,to,from)
+  3.     this function will check whether the resulting move will end in
+freeing the spot. For implementing this, we can check whether this swap
+is moving the middle element to a non middle element.
+   4. function willGetRidOFMid(gridcp,to,from) {
+  if ( to !== 4 && from === 4)
+    return true;
+  return false;
+}
+
+
+        Now we can use these function to check whether our move will
+satisfy at least one of the conditions for when a player had the middle
+spot taken at the start of their turn. First, check if the player needs
+to move by calling needToMove. If this returns false, then the normal
+conditions for moving will be followed. However, if its true, then we
+call the two functions and store their results in some variables. Then,
+use an or operator to check that at least one of them returned true.
+Otherwise, return sch that the player has to make another choice.
+        If at least one of the functions was true, we exit the if
+statement that first checked needToMove(). Then we need to update the
+bool that tracks whether the middle is occupied. We can do this by
+checking whether i ( the position of the element the player is placing a
+marker on ) is 4, or if firstIndex ( the player is moving out of the
+middle ) . if either is true, then we can set the middle tracker to
+the opposite of what it is. Then, set the squares to the updated array
+by calling phaseTwo(). Then we can switch the turns and set the first
+choice bools to their opposites.
+
+
+
+
+This section describes the overall behavior of the program, which is
+structured like this;
+The parent component is App, which holds phase1, phase2 bools to
+track the phase as well as their set functions, and the variable
+turns that starts at 1, which will be used to track the first 6 turns,
+as well as the set function for it. App returns a board component and
+passes all the mentioned variables.
+        Board is the more complex component of the application. For its
+variables, we define squares as the array representing the 9 blocks,
+xIsNext, a boolean to represent whether its the X player’s turn to move,
+chooseFirst, a boolean to represent whether in phase2 if the player is
+selecting the first square ( where the are moving from ), firstIndex, a
+number representing the index of the position they chose to move from.
+Notice in my code i also have currSel and movebruh, these are optional
+for debugging purposes, they just update on what the first choice was,
+or displays nothing if nothing has been selected ( for the first choice )
+and prompts on whether the player needs to move out of the middle.
+        The most important function of Board is the blockClick function.
+This function handles the large part of the logic around the moves and
+rules. First, the board consists of 9 buttons, each calls blockClick(i)
+where i represents the element it represents. First, itchecks whether a
+player has won, and returns if so. Note that if return is called at any
+point in blockClick, this means that the click is sort of ignore ( it gets
+more complicated for phase2, as we might want it to only change some
+stuff)
+ Then, it creates a copy of squares that we will use to doi checks without
+risking changing squares. Next, there are two phases of play, the first is
+where the players are placing their first three marks. Phase 2 is when
+they
+start moving around the pieces, So it first checks whether the phase 2
+book
+Board inherited is true. If so, that means the player is placing, so it
+first checks that that spot is empty, if not it returns. But if its empty,
+it then checks whos turn it is, and sets the ith element of copy to the
+corresponding character. Then it uses the set function for square, and
+sets it to the altered copy. Next is some logic to check whether phase2
+has
+started, and set it up. First, it increments the turns variable by 1. Then
+it checks whether turns is 6, if so it sets phase1 to false and phase2 to
+false, and also checks whether the middle block is occupied ans sets the
+middle bool variable accordingly. After this, it then switched the player
+turn bool variable to the next player.
+        If phase1 is false, we then check that phase 2 is true. Within
+phase2 there are 2 types of clicks happening. First there is the one for
+selecting the element that the player is moving from, and where the player
+is moving to. So,the function will use the variable chooseFirst to decide
+what to do. If it is the first choice, then it must be a currently
+occupied
+element, otherwise it will return. Then if it is occupied, it needs to
+check that the XorO there matches whos turn it is. So if does a check to
+see that its X if xIsNext and O when !xIsNext. If its able to pass those
+conditions, it will then set the firstindex to i and set chooseFirst to
+false.
+        Otherwise, we are selecting the second block, the ‘to’ block.
+There are more conditions for this part. First, it must be the case that
+the element we are moving to is empty. But at that check we also want to
+implement the check for whether the nonempty block they clicked was the
+same block as their first choice, so that theplayer can unselect their
+first choice. We want this in case the plate chose a spot they cant move
+from, or they want to go back on that decision. So if its the same
+element,
+we can check by comparing i and firstChoice, set chooseFirst to true again
+and return.
+        Else, if the second spot is empty, we have some other special
+cases
+to check for. First, weneed to make sure the move is one block away
+up/down,
+ left/right, or diagonal. We can use out function oneAway() to check, and
+if it returns true we move on, otherwise return. The next part of the
+logic
+is that the board must check whether the player needs to move out from the
+middle spot. So, it calls needToMove(), and if it returns true, it checks
+whether the move will result in either a win, or a board with an empty
+middle block. If none are satisfied, it returns. If it does satisfy one,
+then it will pick up at the same point as if needToMove returned true.
+It will check whether i===4 ( moving out of the middle ) or if
+firstIndex===4 ( this move will occupy the middle ), and set the md bool
+to its opposite if so. Then, it sets squares to the array returned by
+phaseTwo, then switches the turn to the other player, sets the chooseFirst
+variable back to false ( so the other player will make their first choice
+)
+  . This ends the move logic.
+         Next, it checks whether the updates squares array is a winning
+board. If so, it displays that, otherwise it will display whos turn it is.
+         The return statement of Board is the HTML + XML representation of
+  the board. This includes 9 components of Square.
+         Square is a component, and a child of Board. It takes the props
+value and blockClick. The value Board passes is the element of squares
+it corresponds to, and blockClick is a arrow function to blockClick(i)
+where i is the index its represented by in squares.
+
+
+
+
+The command: npm pack –dry-run returns the following:
+
+
+npm notice
+npm notice � chorus-lapilli@0.1.0
+npm notice === Tarball Contents ===
+npm notice 3.4kB README.md
+npm notice 817B package.json
+npm notice 3.9kB public/favicon.ico
+npm notice 1.7kB public/index.html
+npm notice 5.3kB public/logo192.png
+npm notice 9.7kB public/logo512.png
+npm notice 492B public/manifest.json
+npm notice 67B   public/robots.txt
+npm notice 945B src/App.css
+npm notice 5.6kB src/App.js
+npm notice 246B src/App.test.js
+npm notice 366B src/index.css
+npm notice 535B src/index.js
+npm notice 2.6kB src/logo.svg
+npm notice 362B src/reportWebVitals.js
+npm notice 241B src/setupTests.js
+npm notice === Tarball Details ===
+npm notice name:           chorus-lapilli
+npm notice version:        0.1.0
+npm notice filename:       chorus-lapilli-0.1.0.tgz
+npm notice package size: 26.9 kB
+npm notice unpacked size: 36.2 kB
+npm notice shasum:         32fa4766be3aa010ef89656fcdcc8b4a557f71ef
+npm notice integrity:      sha512-Ruje36VA2K2hy[...]j4B8tiSHmFhHg==
+npm notice total files:    16
+npm notice
+chorus-lapilli-0.1.0.tgz
+
